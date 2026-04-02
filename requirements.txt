@@ -6,3 +6,4 @@ django-htmx
 django-tailwind-cli
 groq
 psycopg2-binary
+dj-database-url
