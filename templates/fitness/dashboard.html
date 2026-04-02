@@ -31,7 +31,9 @@
                 <i data-lucide="footprints" class="w-10 h-10"></i>
             </div>
             <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Total Steps</p>
-            <h2 class="text-4xl font-black text-white">{{ stats.steps|default:"0" }}</h2>
+            <h2 id="stepCounter" class="text-4xl font-black text-white">
+                {{ stats.steps|default:"0" }}
+            </h2>
         </div>
         <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center">
             <div class="w-16 h-16 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary mb-4">
@@ -156,4 +158,80 @@
 
     </div>
 </div>
+
+<script>
+let steps = 0;
+let lastStepTime = 0;
+
+// iPhone permission (VERY IMPORTANT)
+if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
+    document.body.addEventListener("click", function () {
+        DeviceMotionEvent.requestPermission()
+            .then(response => {
+                if (response === "granted") {
+                    startTracking();
+                }
+            })
+            .catch(console.error);
+    }, { once: true });
+} else {
+    startTracking();
+}
+
+function startTracking() {
+    window.addEventListener("devicemotion", function(event) {
+        let acc = event.accelerationIncludingGravity;
+
+        if (!acc) return;
+
+        let magnitude = Math.sqrt(
+            acc.x * acc.x +
+            acc.y * acc.y +
+            acc.z * acc.z
+        );
+
+        let now = Date.now();
+
+        // Step detection logic (tuned a bit better)
+        if (magnitude > 12 && (now - lastStepTime) > 400) {
+            steps++;
+            lastStepTime = now;
+
+            // Update UI
+            document.getElementById("stepCounter").innerText = steps;
+
+            // Send to backend every 5 steps
+            if (steps % 5 === 0) {
+                sendStepsToServer(steps);
+            }
+        }
+    });
+}
+
+function sendStepsToServer(stepCount) {
+    fetch("/update_steps/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken()
+        },
+        body: JSON.stringify({ steps: stepCount })
+    });
+}
+
+// CSRF helper (Django)
+function getCSRFToken() {
+    let cookieValue = null;
+    let cookies = document.cookie.split(';');
+
+    cookies.forEach(cookie => {
+        let c = cookie.trim();
+        if (c.startsWith('csrftoken=')) {
+            cookieValue = c.substring('csrftoken='.length);
+        }
+    });
+
+    return cookieValue;
+}
+</script>
 {% endblock %}

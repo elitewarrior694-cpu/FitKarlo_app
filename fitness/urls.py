@@ -16,4 +16,5 @@ urlpatterns = [
     path('voice-log/', views.voice_log, name='voice_log'),
     path('community/', views.community_feed, name='community'),
     path('groups/join/<int:group_id>/', views.join_group, name='join_group'),
+    path("update_steps/", views.update_steps, name="update_steps"),
 ]

@@ -15,6 +15,19 @@ ai_service = AIService()
 from django.http import JsonResponse
 
 @login_required
+def update_steps(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        steps = data.get("steps", 0)
+
+        # Save to user profile or stats model
+        profile = request.user.profile
+        profile.steps = steps
+        profile.save()
+
+        return JsonResponse({"status": "ok"})
+
+@login_required
 def analyze_meal(request):
     if request.method == "POST" and request.FILES.get("meal_image"):
         image = request.FILES["meal_image"]
