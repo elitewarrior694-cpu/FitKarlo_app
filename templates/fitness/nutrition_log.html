@@ -1,0 +1,161 @@
+{% extends 'base.html' %} {% block content %}
+<div class="max-w-4xl mx-auto py-8">
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-bold tracking-tight">
+      AI Nutrition <span class="text-secondary">Intelligence</span>
+    </h1>
+    <a
+      href="{% url 'fitness:dashboard' %}"
+      class="text-sm opacity-50 hover:opacity-100 flex items-center"
+    >
+      <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- AI Vision / Meal Scanner -->
+    <div
+      class="glass p-8 rounded-[2.5rem] border border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent relative overflow-hidden group"
+    >
+      <div class="absolute top-0 right-0 p-6 opacity-30">
+        <i
+          data-lucide="camera"
+          class="w-12 h-12 text-secondary group-hover:scale-110 transition-transform"
+        ></i>
+      </div>
+
+      <form
+        action="{% url 'fitness:coach_chat' %}"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        {% csrf_token %}
+        <div
+          class="w-full h-56 bg-white/5 rounded-3xl border border-dashed border-white/20 flex flex-col items-center justify-center space-y-4 mb-6 relative hover:bg-white/10 transition-all"
+        >
+          <input
+            type="file"
+            name="meal_image"
+            required
+            class="absolute inset-0 opacity-0 cursor-pointer"
+            onchange="this.form.submit()"
+          />
+          <div
+            class="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center pointer-events-none"
+          >
+            <i data-lucide="image-plus" class="w-8 h-8 text-secondary"></i>
+          </div>
+          <span
+            class="text-[10px] font-bold uppercase tracking-widest opacity-40 pointer-events-none"
+            >Tap to Scan Meal (AI Vision)</span
+          >
+        </div>
+      </form>
+
+      <button
+        disabled
+        class="w-full bg-secondary/20 text-secondary py-4 rounded-2xl font-bold flex items-center justify-center space-x-2"
+      >
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+        <span>Analyze with AI Vision</span>
+      </button>
+      <div class="mt-4 text-center">
+        <a
+          href="{% url 'fitness:voice_log' %}"
+          class="text-xs font-bold text-primary uppercase tracking-widest hover:underline flex items-center justify-center"
+        >
+          <i data-lucide="mic" class="w-3 h-3 mr-1"></i> Try Voice Logging
+          instead
+        </a>
+      </div>
+
+      <p class="text-[10px] text-center mt-3 opacity-30 italic">
+        Cloud API connection required for live analysis.
+      </p>
+    </div>
+
+    <!-- Manual Entry Form -->
+    <div class="glass p-8 rounded-[2.5rem] border border-white/5 space-y-6">
+      <h3 class="font-bold text-lg flex items-center">
+        <i data-lucide="type" class="w-5 h-5 text-primary mr-2"></i> Manual
+        Logging
+      </h3>
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div class="space-y-1">
+          <label
+            class="text-[10px] font-bold uppercase tracking-widest opacity-40"
+            >What did you eat?</label
+          >
+          <input
+            type="text"
+            name="food_name"
+            required
+            placeholder="e.g. Grilled Chicken Salad"
+            class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus:border-secondary outline-none transition-all"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label
+              class="text-[10px] font-bold uppercase tracking-widest opacity-40"
+              >Calories (kcal)</label
+            >
+            <input
+              type="number"
+              name="calories"
+              required
+              class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus:border-secondary outline-none transition-all"
+            />
+          </div>
+          <div class="space-y-1">
+            <label
+              class="text-[10px] font-bold uppercase tracking-widest opacity-40"
+              >Protein (g)</label
+            >
+            <input
+              type="number"
+              name="protein"
+              class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus:border-secondary outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label
+              class="text-[10px] font-bold uppercase tracking-widest opacity-40"
+              >Carbs (g)</label
+            >
+            <input
+              type="number"
+              name="carbs"
+              class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus:border-secondary outline-none transition-all"
+            />
+          </div>
+          <div class="space-y-1">
+            <label
+              class="text-[10px] font-bold uppercase tracking-widest opacity-40"
+              >Fats (g)</label
+            >
+            <input
+              type="number"
+              name="fats"
+              class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus:border-secondary outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-white/10 hover:bg-white/20 py-4 rounded-2xl font-bold transition-all border border-white/10 mt-2"
+        >
+          Log Meal
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

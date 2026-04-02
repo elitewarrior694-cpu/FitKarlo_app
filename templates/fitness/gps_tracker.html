@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold tracking-tight">Run <span class="text-primary">Tracker</span></h1>
+        <a href="{% url 'fitness:dashboard' %}" class="w-10 h-10 glass rounded-full flex items-center justify-center">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </a>
+    </div>
+
+    <!-- Live Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="glass p-6 rounded-[2rem] border border-white/5 text-center">
+            <p class="text-[10px] font-bold uppercase opacity-40 mb-1">Pace</p>
+            <h2 id="pace" class="text-2xl font-black">0:00</h2>
+            <p class="text-[10px] opacity-30">min/km</p>
+        </div>
+        <div class="glass p-6 rounded-[2rem] border border-white/5 text-center">
+            <p class="text-[10px] font-bold uppercase opacity-40 mb-1">Distance</p>
+            <h2 id="distance" class="text-2xl font-black">0.00</h2>
+            <p class="text-[10px] opacity-30">km</p>
+        </div>
+        <div class="glass p-6 rounded-[3rem] border border-white/5 text-center col-span-2 md:col-span-1 bg-primary/10 border-primary/20">
+            <p class="text-[10px] font-bold uppercase opacity-40 mb-1">Time</p>
+            <h2 id="timer" class="text-2xl font-black">00:00</h2>
+            <p class="text-[10px] opacity-30">active</p>
+        </div>
+        <div class="glass p-6 rounded-[2rem] border border-white/5 text-center hidden md:block">
+            <p class="text-[10px] font-bold uppercase opacity-40 mb-1">Calories</p>
+            <h2 id="calories" class="text-2xl font-black">0</h2>
+            <p class="text-[10px] opacity-30">est. burn</p>
+        </div>
+    </div>
+
+    <!-- Map Area -->
+    <div class="w-full h-80 glass rounded-[3rem] border border-white/5 overflow-hidden relative mb-8">
+        <div id="map" class="w-full h-full bg-white/5 flex items-center justify-center">
+            <div class="text-center space-y-4">
+                <i data-lucide="map-pin" class="w-12 h-12 text-primary animate-bounce mx-auto"></i>
+                <p class="text-xs opacity-30 font-bold uppercase tracking-widest">Waiting for GPS...</p>
+            </div>
+        </div>
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-4">
+            <button id="start-btn" class="px-10 py-4 bg-primary rounded-full font-bold shadow-xl shadow-primary/30 flex items-center space-x-2">
+                <i data-lucide="play" class="w-5 h-5"></i>
+                <span>Start Run</span>
+            </button>
+            <button id="stop-btn" class="hidden px-10 py-4 bg-red-500 rounded-full font-bold shadow-xl shadow-red-500/30 flex items-center space-x-2">
+                <i data-lucide="square" class="w-5 h-5"></i>
+                <span>Finish</span>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let watchId = null;
+    let startTime = null;
+    let timerInterval = null;
+    let totalDistance = 0;
+    let lastPos = null;
+
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const timerEl = document.getElementById('timer');
+    const distanceEl = document.getElementById('distance');
+
+    startBtn.onclick = () => {
+        if (!navigator.geolocation) {
+            alert("GPS not supported on this device.");
+            return;
+        }
+
+        startBtn.classList.add('hidden');
+        stopBtn.classList.remove('hidden');
+        
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+
+        watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const { latitude, longitude, speed } = pos.coords;
+                if (lastPos) {
+                    const d = calculateDistance(lastPos.lat, lastPos.lng, latitude, longitude);
+                    totalDistance += d;
+                    distanceEl.innerText = totalDistance.toFixed(2);
+                }
+                lastPos = { lat: latitude, lng: longitude };
+                
+                // Update map UI (placeholder)
+                console.log("GPS Updated:", latitude, longitude);
+            },
+            (err) => console.error("GPS Error:", err),
+            { enableHighAccuracy: true }
+        );
+    };
+
+    stopBtn.onclick = () => {
+        navigator.geolocation.clearWatch(watchId);
+        clearInterval(timerInterval);
+        alert(`Run finished! Total Distance: ${totalDistance.toFixed(2)} km`);
+        window.location.href = "{% url 'fitness:dashboard' %}";
+    };
+
+    function updateTimer() {
+        const diff = Math.floor((Date.now() - startTime) / 1000);
+        const mins = Math.floor(diff / 60).toString().padStart(2, '0');
+        const secs = (diff % 60).toString().padStart(2, '0');
+        timerEl.innerText = `${mins}:${secs}`;
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        // Haversine formula
+        const R = 6371; // km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+</script>
+{% endblock %}

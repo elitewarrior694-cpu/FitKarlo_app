@@ -1,0 +1,118 @@
+{% extends 'base.html' %} {% block content %}
+<div class="max-w-2xl mx-auto py-12">
+  <div class="text-center space-y-8">
+    <h1 class="text-4xl font-bold tracking-tight">
+      Voice <span class="text-primary">Intelligence</span>
+    </h1>
+    <p class="opacity-50">Speak your meal and let AI handle the logging.</p>
+
+    <div class="flex justify-center">
+      <div
+        id="record-btn"
+        class="w-32 h-32 rounded-full bg-primary/10 border-4 border-primary/20 flex items-center justify-center cursor-pointer group hover:bg-primary/20 transition-all relative"
+      >
+        <div
+          class="absolute inset-0 rounded-full border border-primary animate-ping opacity-20 hidden"
+          id="pulse"
+        ></div>
+        <i
+          data-lucide="mic"
+          class="w-12 h-12 text-primary group-hover:scale-110 transition-transform"
+        ></i>
+      </div>
+    </div>
+
+    <div
+      id="status"
+      class="text-xs font-bold uppercase tracking-widest opacity-30"
+    >
+      Tap to start recording
+    </div>
+
+    <form
+      id="voice-form"
+      action="{% url 'fitness:voice_log' %}"
+      method="post"
+      enctype="multipart/form-data"
+      class="hidden"
+    >
+      {% csrf_token %}
+      <input type="file" name="audio" id="audio-input" />
+    </form>
+
+    <div
+      class="glass p-8 rounded-3xl border border-white/5 text-left space-y-4"
+    >
+      <h3 class="font-bold flex items-center">
+        <i data-lucide="info" class="w-4 h-4 text-primary mr-2"></i> How it
+        works
+      </h3>
+      <ul class="text-sm opacity-60 space-y-2 list-disc list-inside">
+        <li>Simple: "I had two eggs and toast for breakfast"</li>
+        <li>Detailed: "Chicken salad with olive oil and a glass of juice"</li>
+        <li>AI automatically extracts calories and macros.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  const btn = document.getElementById("record-btn");
+  const pulse = document.getElementById("pulse");
+  const status = document.getElementById("status");
+
+  let mediaRecorder;
+  let audioChunks = [];
+  let recording = false;
+
+  btn.onclick = async () => {
+    if (!recording) {
+      // 🎤 START RECORDING
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm",
+      });
+
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: "audio/webm" });
+
+        const formData = new FormData();
+        formData.append("audio", blob, "recording.webm");
+
+        status.innerText = "Processing with Whisper AI...";
+
+        // 🚀 SEND TO DJANGO
+        const response = await fetch("{% url 'fitness:voice_log' %}", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+        });
+
+        window.location.href = "{% url 'fitness:dashboard' %}";
+      };
+
+      mediaRecorder.start();
+
+      recording = true;
+      pulse.classList.remove("hidden");
+      status.innerText = "Listening...";
+      status.classList.add("text-primary", "opacity-100");
+    } else {
+      // ⏹ STOP RECORDING
+      mediaRecorder.stop();
+
+      recording = false;
+      pulse.classList.add("hidden");
+    }
+  };
+</script>
+{% endblock %}

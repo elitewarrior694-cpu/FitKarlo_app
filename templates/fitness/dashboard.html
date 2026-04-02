@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight">Welcome back, <span class="text-primary">{{ user.username }}</span></h1>
+            <p class="opacity-50 text-sm">Here's your fitness evolution update for today.</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="bg-primary/10 border border-primary/20 px-6 py-2 rounded-2xl flex items-center space-x-3">
+                <i data-lucide="award" class="w-5 h-5 text-primary"></i>
+                <div>
+                    <p class="text-[8px] font-bold uppercase opacity-40">Evolution Score</p>
+                    <p class="text-xl font-black text-primary">{{ evolution_points }}</p>
+                </div>
+            </div>
+            <div class="hidden sm:flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl h-fit">
+                <i data-lucide="calendar" class="w-4 h-4 text-primary"></i>
+                <span class="text-sm font-medium">{% now "F j, Y" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <!-- Simplified Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center">
+            <div class="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-4">
+                <i data-lucide="footprints" class="w-10 h-10"></i>
+            </div>
+            <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Total Steps</p>
+            <h2 class="text-4xl font-black text-white">{{ stats.steps|default:"0" }}</h2>
+        </div>
+        <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center">
+            <div class="w-16 h-16 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary mb-4">
+                <i data-lucide="zap" class="w-10 h-10"></i>
+            </div>
+            <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Calories Burned</p>
+            <h2 class="text-4xl font-black text-white">{{ total_calories|default:"0" }}</h2>
+        </div>
+        <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center">
+            <div class="w-16 h-16 rounded-3xl bg-blue-400/10 flex items-center justify-center text-blue-400 mb-4">
+                <i data-lucide="moon" class="w-10 h-10"></i>
+            </div>
+            <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Sleep Quality</p>
+            <h2 class="text-4xl font-black text-white">{{ stats.sleep_hours|default:"0" }} <span class="text-xs opacity-30">hrs</span></h2>
+        </div>
+    </div>
+
+            <!-- Recent Activity Table -->
+            <div class="glass rounded-[2rem] overflow-hidden">
+                <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center">
+                    <h3 class="font-bold text-lg">Recent Activities</h3>
+                    <a href="#" class="text-xs font-bold text-primary hover:underline">View All</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-[10px] uppercase font-bold tracking-widest opacity-30 border-b border-white/5">
+                                <th class="px-8 py-4">Type</th>
+                                <th class="px-8 py-4">Duration</th>
+                                <th class="px-8 py-4">Distance</th>
+                                <th class="px-8 py-4">Calories</th>
+                                <th class="px-8 py-4">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for activity in recent_activities %}
+                            <tr class="hover:bg-white/[0.02] transition-colors group">
+                                <td class="px-8 py-5">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                                            {% if activity.type == 'RUN' %}<i data-lucide="run" class="w-4 h-4"></i>
+                                            {% elif activity.type == 'WALK' %}<i data-lucide="footprints" class="w-4 h-4"></i>
+                                            {% else %}<i data-lucide="dumbbell" class="w-4 h-4"></i>{% endif %}
+                                        </div>
+                                        <span class="font-semibold text-sm">{{ activity.get_type_display }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-5 text-sm opacity-60 font-medium">{{ activity.duration_minutes }} min</td>
+                                <td class="px-8 py-5 text-sm opacity-60 font-medium">{{ activity.distance_km }} km</td>
+                                <td class="px-8 py-5 text-sm text-secondary font-bold">{{ activity.calories_burned }}</td>
+                                <td class="px-8 py-5 text-sm opacity-40 font-medium">{{ activity.start_time|date:"M d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="px-8 py-12 text-center opacity-30 italic text-sm">No recent activities found. Start moving!</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column / AI Insights -->
+        <div class="space-y-6">
+            <!-- AI Coach Insights -->
+            <div class="glass rounded-[2rem] p-8 border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center">
+                        <i data-lucide="brain-circuit" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h3 class="font-bold text-lg">AI Coach Insight</h3>
+                </div>
+                
+                <div class="space-y-4">
+                    <p class="text-sm leading-relaxed opacity-70">
+                        "{{ ai_insight }}"
+                    </p>
+                    <div class="flex flex-col space-y-2">
+                        <div class="flex justify-between text-[11px] font-bold uppercase tracking-wider opacity-40">
+                            <span>Weekly Progress</span>
+                            <span>72%</span>
+                        </div>
+                        <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r from-primary to-secondary h-full" style="width: 72%"></div>
+                        </div>
+                    </div>
+                    <button class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold transition-all border border-white/5">
+                        Generate Daily Plan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Health Analytics Shortlist -->
+            <div class="glass rounded-[2rem] p-8">
+                <h3 class="font-bold text-lg mb-6">Health Metrics</h3>
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="heart" class="text-red-500 w-5 h-5"></i>
+                            <span class="text-sm font-semibold opacity-60">Avg Heart Rate</span>
+                        </div>
+                        <span class="text-sm font-bold">72 <span class="text-[10px] opacity-40 font-normal">BPM</span></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="droplets" class="text-blue-500 w-5 h-5"></i>
+                            <span class="text-sm font-semibold opacity-60">Water Intake</span>
+                        </div>
+                        <span class="text-sm font-bold">1.2 <span class="text-[10px] opacity-40 font-normal">Liters</span></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="scale" class="text-primary w-5 h-5"></i>
+                            <span class="text-sm font-semibold opacity-60">Current Weight</span>
+                        </div>
+                        <span class="text-sm font-bold">{{ profile.weight|default:"--" }} <span class="text-[10px] opacity-40 font-normal">kg</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

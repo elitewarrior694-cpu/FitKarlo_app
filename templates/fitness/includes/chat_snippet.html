@@ -1,0 +1,24 @@
+<!-- User Message -->
+<div class="flex items-start justify-end space-x-3">
+    <div class="bg-primary text-white px-6 py-4 rounded-[2rem] rounded-tr-none text-sm shadow-lg shadow-primary/20 max-w-[85%]">
+        {{ user_message }}
+    </div>
+    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="user" class="w-4 h-4 text-primary"></i>
+    </div>
+</div>
+
+<!-- AI Response -->
+<div class="flex items-start space-x-3">
+    <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="bot" class="w-4 h-4 opacity-50"></i>
+    </div>
+    <div class="glass px-6 py-4 rounded-[2rem] rounded-tl-none border border-white/5 text-sm leading-relaxed max-w-[85%]">
+        {{ ai_response }}
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    scrollChat();
+</script>

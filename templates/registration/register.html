@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto py-12">
+    <div class="glass p-10 rounded-[2.5rem] border border-white/5 shadow-2xl">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-bold mb-2">Join FitKarlo</h2>
+            <p class="opacity-50 text-sm">Start your AI-powered evolution.</p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="space-y-1">
+                <label class="text-xs font-bold uppercase tracking-wider opacity-40 ml-1">{{ field.label }}</label>
+                <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" required class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm">
+                {% if field.errors %}
+                <p class="text-[10px] text-red-400 mt-1">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full bg-secondary py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:shadow-secondary/30 transition-all flex items-center justify-center space-x-2 mt-4 text-white">
+                <span>Create Account</span>
+                <i data-lucide="user-plus" class="w-5 h-5"></i>
+            </button>
+        </form>
+
+        <div class="mt-8 text-center border-t border-white/5 pt-8">
+            <p class="text-sm opacity-50">Already have an account? <a href="{% url 'login' %}" class="text-primary font-bold hover:underline">Sign In</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

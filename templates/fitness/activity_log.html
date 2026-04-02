@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold tracking-tight">Log <span class="text-primary">Activity</span></h1>
+        <a href="{% url 'fitness:dashboard' %}" class="text-sm opacity-50 hover:opacity-100 flex items-center">
+            <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Manual Log Form -->
+        <div class="glass p-8 rounded-[2.5rem] border border-white/5 h-full">
+            <h3 class="font-bold text-lg mb-6 flex items-center">
+                <i data-lucide="edit-3" class="w-5 h-5 text-primary mr-2"></i> Manual Entry
+            </h3>
+            
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase tracking-widest opacity-40">Activity Type</label>
+                    <select name="type" class="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 focus:border-primary outline-none">
+                        <option value="RUN">Running</option>
+                        <option value="WALK">Walking</option>
+                        <option value="CYCL">Cycling</option>
+                        <option value="WORK">Workout</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-widest opacity-40">Duration (min)</label>
+                        <input type="number" name="duration_minutes" required class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:border-primary outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-widest opacity-40">Distance (km)</label>
+                        <input type="number" step="0.1" name="distance_km" value="0" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:border-primary outline-none">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase tracking-widest opacity-40">Intensity Scale</label>
+                    <div class="flex justify-between items-center px-2">
+                        <span class="text-[10px] opacity-40">Low</span>
+                        <span class="text-[10px] opacity-40">Extreme</span>
+                    </div>
+                    <input type="range" name="intensity" min="1" max="10" class="w-full accent-primary">
+                </div>
+
+                <button type="submit" class="w-full bg-primary py-4 rounded-2xl font-bold hover:shadow-xl hover:shadow-primary/30 transition-all mt-4">
+                    Save Activity
+                </button>
+            </form>
+        </div>
+
+        <!-- GPS / Map Simulation -->
+        <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col items-center justify-center text-center space-y-6">
+            <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center animate-pulse">
+                <i data-lucide="map-pin" class="w-10 h-10 text-secondary"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-lg">GPS Live Tracking</h3>
+                <p class="text-sm opacity-50 px-8 mt-2">Mobile app exclusive feature. Connect your wearable or use the mobile app for real-time GPS path tracking.</p>
+            </div>
+            <div class="w-full h-48 bg-white/5 rounded-3xl border border-dashed border-white/10 flex items-center justify-center">
+                <span class="text-xs opacity-20 font-mono tracking-widest uppercase">Map API Placeholder</span>
+            </div>
+            <button disabled class="w-full py-4 rounded-2xl border border-white/10 opacity-30 cursor-not-allowed">
+                Start Live Session
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

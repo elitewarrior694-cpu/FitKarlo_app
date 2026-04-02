@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto h-[calc(100vh-12rem)] flex flex-col">
+    <!-- Chat Header -->
+    <div class="flex items-center space-x-4 mb-8">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+            <i data-lucide="sparkles" class="w-6 h-6"></i>
+        </div>
+        <div>
+            <h2 class="text-xl font-bold">AI Coach <span class="text-primary italic">Karlo</span></h2>
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span class="text-[10px] opacity-40 font-bold uppercase tracking-widest">Always Listening</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Area -->
+    <div id="chat-box" class="flex-1 overflow-y-auto space-y-6 pr-4 mb-6 custom-scrollbar">
+        <!-- AI Message -->
+        <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="bot" class="w-4 h-4 opacity-50"></i>
+            </div>
+            <div class="glass px-6 py-4 rounded-[2rem] rounded-tl-none border border-white/5 text-sm leading-relaxed max-w-[85%]">
+                Hello! I'm Karlo, your personal AI fitness guide. I see your progress on the dashboard. How can I help you evolve further today?
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="relative">
+        <form id="chat-form" hx-post="{% url 'fitness:coach_chat' %}" hx-target="#chat-box" hx-swap="beforeend" hx-on::after-request="this.reset(); scrollChat();">
+            {% csrf_token %}
+            <input type="text" name="message" placeholder="Ask about your plan, diet, or just talk..." 
+                   class="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 pr-32 focus:border-primary outline-none transition-all placeholder:opacity-30">
+            
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2">
+                <button type="button" class="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center opacity-40 hover:opacity-100 transition-all">
+                    <i data-lucide="mic" class="w-5 h-5"></i>
+                </button>
+                <button type="submit" class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/40 hover:scale-110 transition-all">
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function scrollChat() {
+        const chatBox = document.getElementById('chat-box');
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    // Auto-scroll on initial load
+    window.onload = scrollChat;
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+</style>
+{% endblock %}
