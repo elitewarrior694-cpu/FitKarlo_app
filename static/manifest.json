@@ -8,7 +8,7 @@
   "description": "AI-Powered Fitness Evolution",
   "icons": [
     {
-      "src": "https://img.icons8.com/clouds/100/fitness.png",
+      "src": "../icon.png",
       "sizes": "100x100",
       "type": "image/png"
     }

@@ -1,14 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- PWA & Mobile Optimization -->
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#3B82F6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/clouds/100/fitness.png">
+    <link rel="manifest" href="/static/manifest.json" />
+    <meta name="theme-color" content="#3B82F6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="apple-touch-icon" href="../icon.png" />
 
     <title>{% block title %}FitKarlo | AI-Powered Fitness{% endblock %}</title>
     <!-- Tailwind CSS CDN -->
@@ -16,124 +19,185 @@
     <!-- HTMX CDN -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <!-- Alpine.js CDN -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B82F6',   // Electric Blue
-                        secondary: '#22C55E', // Neon Green
-                        accent: '#F97316',    // Soft Orange
-                        dark: '#0A0A0B',      // Background
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3B82F6", // Electric Blue
+              secondary: "#22C55E", // Neon Green
+              accent: "#F97316", // Soft Orange
+              dark: "#0A0A0B", // Background
+            },
+          },
+        },
+      };
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0A0A0B;
-            color: #FFFFFF;
-        }
-        h1, h2, h3, h4 {
-            font-family: 'Outfit', sans-serif;
-        }
-        .glass {
-            background: rgba(25, 25, 26, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .text-gradient {
-            background: linear-gradient(to right, #3B82F6, #22C55E);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #0a0a0b;
+        color: #ffffff;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Outfit", sans-serif;
+      }
+      .glass {
+        background: rgba(25, 25, 26, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .text-gradient {
+        background: linear-gradient(to right, #3b82f6, #22c55e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
     </style>
     {% block head %}{% endblock %}
-</head>
-<body class="min-h-screen">
+  </head>
+  <body class="min-h-screen">
     <!-- Navigation -->
     <nav class="sticky top-0 z-50 glass border-b border-white/5 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-gradient-to-tr from-primary to-secondary rounded-lg flex items-center justify-center">
-                    <i data-lucide="zap" class="w-5 h-5 text-white"></i>
-                </div>
-                <span class="text-2xl font-extrabold tracking-tighter text-white">Fit<span class="text-secondary">Karlo</span></span>
-            </div>
-            
-            <div class="hidden md:flex space-x-8 text-sm font-medium">
-                <a href="{% url 'fitness:dashboard' %}" class="{% if active_page == 'dashboard' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors">Dashboard</a>
-                <a href="{% url 'fitness:track_activity' %}" class="{% if active_page == 'activity' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors">Activity</a>
-                <a href="{% url 'fitness:log_nutrition' %}" class="{% if active_page == 'nutrition' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors">Nutrition</a>
-                <a href="{% url 'fitness:coach_chat' %}" class="{% if active_page == 'coach' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors font-bold flex items-center"><i data-lucide="sparkles" class="w-4 h-4 mr-1"></i>Coach</a>
-                <a href="{% url 'fitness:community' %}" class="{% if active_page == 'community' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors">Community</a>
-            </div>
-
-            <div class="flex items-center space-x-4">
-                {% if user.is_authenticated %}
-                    <div class="flex items-center space-x-2">
-                        <span class="text-sm opacity-60">{{ user.username }}</span>
-                        <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
-                            <i data-lucide="user" class="w-4 h-4 text-primary"></i>
-                        </div>
-                    </div>
-                {% else %}
-                    <a href="/login" class="px-4 py-2 text-sm font-semibold rounded-full border border-white/10 hover:bg-white/5 transition-all">Login</a>
-                    <a href="/register" class="px-4 py-2 text-sm font-semibold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all">Get Started</a>
-                {% endif %}
-            </div>
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <div
+            class="w-8 h-8 bg-gradient-to-tr from-primary to-secondary rounded-lg flex items-center justify-center"
+          >
+            <i data-lucide="zap" class="w-5 h-5 text-white"></i>
+          </div>
+          <span class="text-2xl font-extrabold tracking-tighter text-white"
+            >Fit<span class="text-secondary">Karlo</span></span
+          >
         </div>
+
+        <div class="hidden md:flex space-x-8 text-sm font-medium">
+          <a
+            href="{% url 'fitness:dashboard' %}"
+            class="{% if active_page == 'dashboard' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors"
+            >Dashboard</a
+          >
+          <a
+            href="{% url 'fitness:track_activity' %}"
+            class="{% if active_page == 'activity' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors"
+            >Activity</a
+          >
+          <a
+            href="{% url 'fitness:log_nutrition' %}"
+            class="{% if active_page == 'nutrition' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors"
+            >Nutrition</a
+          >
+          <a
+            href="{% url 'fitness:coach_chat' %}"
+            class="{% if active_page == 'coach' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors font-bold flex items-center"
+            ><i data-lucide="sparkles" class="w-4 h-4 mr-1"></i>Coach</a
+          >
+          <a
+            href="{% url 'fitness:community' %}"
+            class="{% if active_page == 'community' %}text-primary{% else %}hover:text-primary{% endif %} transition-colors"
+            >Community</a
+          >
+        </div>
+
+        <div class="flex items-center space-x-4">
+          {% if user.is_authenticated %}
+          <div class="flex items-center space-x-2">
+            <span class="text-sm opacity-60">{{ user.username }}</span>
+            <div
+              class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30"
+            >
+              <i data-lucide="user" class="w-4 h-4 text-primary"></i>
+            </div>
+          </div>
+          {% else %}
+          <a
+            href="/login"
+            class="px-4 py-2 text-sm font-semibold rounded-full border border-white/10 hover:bg-white/5 transition-all"
+            >Login</a
+          >
+          <a
+            href="/register"
+            class="px-4 py-2 text-sm font-semibold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all"
+            >Get Started</a
+          >
+          {% endif %}
+        </div>
+      </div>
     </nav>
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-8">
-        {% block content %}{% endblock %}
+      {% block content %}{% endblock %}
     </main>
 
     <!-- Simplified Mobile Nav -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-white/5 px-6 py-3 pb-8 flex justify-between items-center z-50">
-        <a href="{% url 'fitness:dashboard' %}" class="flex flex-col items-center space-y-1 {% if active_page == 'dashboard' %}text-primary{% else %}opacity-40{% endif %}">
-            <i data-lucide="layout-grid" class="w-6 h-6"></i>
-            <span class="text-[9px] font-bold uppercase">Home</span>
-        </a>
-        <a href="{% url 'fitness:gps_tracker' %}" class="flex flex-col items-center space-y-1 {% if active_page == 'activity' %}text-primary{% else %}opacity-40{% endif %}">
-            <i data-lucide="map-pin" class="w-6 h-6"></i>
-            <span class="text-[9px] font-bold uppercase">Track</span>
-        </a>
-        <a href="{% url 'fitness:coach_chat' %}" class="flex flex-col items-center space-y-1 -mt-8">
-            <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white shadow-xl shadow-primary/40 ring-4 ring-dark">
-                <i data-lucide="sparkles" class="w-7 h-7"></i>
-            </div>
-            <span class="text-[9px] font-bold uppercase mt-1 text-primary">Karlo</span>
-        </a>
-        <a href="{% url 'fitness:log_nutrition' %}" class="flex flex-col items-center space-y-1 {% if active_page == 'nutrition' %}text-primary{% else %}opacity-40{% endif %}">
-            <i data-lucide="camera" class="w-6 h-6"></i>
-            <span class="text-[9px] font-bold uppercase">Scan</span>
-        </a>
-        <a href="{% url 'fitness:community' %}" class="flex flex-col items-center space-y-1 {% if active_page == 'community' %}text-primary{% else %}opacity-40{% endif %}">
-            <i data-lucide="users" class="w-6 h-6"></i>
-            <span class="text-[9px] font-bold uppercase">Social</span>
-        </a>
+    <div
+      class="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-white/5 px-6 py-3 pb-8 flex justify-between items-center z-50"
+    >
+      <a
+        href="{% url 'fitness:dashboard' %}"
+        class="flex flex-col items-center space-y-1 {% if active_page == 'dashboard' %}text-primary{% else %}opacity-40{% endif %}"
+      >
+        <i data-lucide="layout-grid" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold uppercase">Home</span>
+      </a>
+      <a
+        href="{% url 'fitness:gps_tracker' %}"
+        class="flex flex-col items-center space-y-1 {% if active_page == 'activity' %}text-primary{% else %}opacity-40{% endif %}"
+      >
+        <i data-lucide="map-pin" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold uppercase">Track</span>
+      </a>
+      <a
+        href="{% url 'fitness:coach_chat' %}"
+        class="flex flex-col items-center space-y-1 -mt-8"
+      >
+        <div
+          class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white shadow-xl shadow-primary/40 ring-4 ring-dark"
+        >
+          <i data-lucide="sparkles" class="w-7 h-7"></i>
+        </div>
+        <span class="text-[9px] font-bold uppercase mt-1 text-primary"
+          >Karlo</span
+        >
+      </a>
+      <a
+        href="{% url 'fitness:log_nutrition' %}"
+        class="flex flex-col items-center space-y-1 {% if active_page == 'nutrition' %}text-primary{% else %}opacity-40{% endif %}"
+      >
+        <i data-lucide="camera" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold uppercase">Scan</span>
+      </a>
+      <a
+        href="{% url 'fitness:community' %}"
+        class="flex flex-col items-center space-y-1 {% if active_page == 'community' %}text-primary{% else %}opacity-40{% endif %}"
+      >
+        <i data-lucide="users" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold uppercase">Social</span>
+      </a>
     </div>
 
     <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
-        
-        // HTMX anti-forgery token setup
-        document.body.addEventListener('htmx:configRequest', (event) => {
-            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-        });
+      // Initialize Lucide icons
+      lucide.createIcons();
+
+      // HTMX anti-forgery token setup
+      document.body.addEventListener("htmx:configRequest", (event) => {
+        event.detail.headers["X-CSRFToken"] = "{{ csrf_token }}";
+      });
     </script>
-</body>
+  </body>
 </html>
