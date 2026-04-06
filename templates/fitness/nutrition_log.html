@@ -24,11 +24,7 @@
         ></i>
       </div>
 
-      <form
-        action="{% url 'fitness:coach_chat' %}"
-        method="post"
-        enctype="multipart/form-data"
-      >
+      <form id="mealForm" enctype="multipart/form-data">
         {% csrf_token %}
         <div
           class="w-full h-56 bg-white/5 rounded-3xl border border-dashed border-white/20 flex flex-col items-center justify-center space-y-4 mb-6 relative hover:bg-white/10 transition-all"
@@ -38,7 +34,7 @@
             name="meal_image"
             required
             class="absolute inset-0 opacity-0 cursor-pointer"
-            onchange="this.form.submit()"
+            onchange="uploadImage(event)"
           />
           <div
             class="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center pointer-events-none"
@@ -158,4 +154,154 @@
     </div>
   </div>
 </div>
+
+<div
+  id="popup"
+  style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  "
+>
+  <div class="w-[320px]">
+    <!-- 🔄 Loading -->
+    <div id="loading" class="text-center text-white">
+      <h3>Analyzing...</h3>
+    </div>
+
+    <!-- ✅ Result Card -->
+    <div id="result" style="display: none">
+      <div id="mealCard"></div>
+
+      <button
+        onclick="saveMeal()"
+        class="w-full mt-4 bg-secondary py-3 rounded-xl font-bold"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let mealData = null;
+
+  async function uploadImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 👉 show popup
+    document.getElementById("popup").style.display = "flex";
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("result").style.display = "none";
+
+    let formData = new FormData();
+    formData.append("meal_image", file);
+
+    try {
+      let res = await fetch("{% url 'fitness:analyze_meal' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: formData,
+      });
+
+      // ❌ Agar error status aaya
+      if (!res.ok) {
+        throw new Error("Server error");
+      }
+
+      let data = await res.json();
+      mealData = data;
+
+      // 👉 CARD UI
+      const cardHTML = `
+<div class="glass p-5 rounded-2xl border border-white/5 hover:bg-white/[0.03] transition-all group">
+
+  <!-- Top -->
+  <div class="flex items-center justify-between mb-4">
+    <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
+      <i data-lucide="utensils" class="w-5 h-5"></i>
+    </div>
+
+    <!-- Health Score -->
+    <span class="text-[10px] font-bold px-2 py-1 rounded-full 
+      ${
+        data.health_score > 75
+          ? "bg-green-500/20 text-green-400"
+          : data.health_score > 40
+            ? "bg-yellow-500/20 text-yellow-400"
+            : "bg-red-500/20 text-red-400"
+      }">
+      ${data.health_score}
+    </span>
+  </div>
+
+  <!-- Food Name -->
+  <h4 class="font-semibold text-sm mb-2 line-clamp-2">
+    ${data.food_name}
+  </h4>
+
+  <!-- Calories -->
+  <p class="text-xl font-black text-secondary mb-3">
+    ${data.calories} kcal
+  </p>
+
+  <!-- Macros -->
+  <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+    <div>
+      <p class="opacity-40">P</p>
+      <p class="font-bold">${data.protein}g</p>
+    </div>
+    <div>
+      <p class="opacity-40">C</p>
+      <p class="font-bold">${data.carbs}g</p>
+    </div>
+    <div>
+      <p class="opacity-40">F</p>
+      <p class="font-bold">${data.fats}g</p>
+    </div>
+  </div>
+
+  <!-- Time -->
+  <p class="text-[10px] opacity-30 mt-4">
+    Just now
+  </p>
+
+</div>
+`;
+      document.getElementById("mealCard").innerHTML = cardHTML;
+      lucide.createIcons();
+
+      // 👉 switch UI
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("result").style.display = "block";
+    } catch (err) {
+      console.error("❌ ERROR:", err);
+
+      document.getElementById("loading").innerHTML = `
+      <p style="color:red;">Error analyzing image</p>
+    `;
+    }
+  }
+
+  async function saveMeal() {
+    await fetch("{% url 'fitness:save_ai_meal' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify(mealData),
+    });
+
+    // 👉 redirect
+    window.location.href = "{% url 'fitness:dashboard' %}";
+  }
+</script>
 {% endblock %}

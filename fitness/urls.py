@@ -13,6 +13,7 @@ urlpatterns = [
     path('coach-chat/', views.coach_chat, name='coach_chat'),
     path('log-nutrition/', views.log_nutrition, name='log_nutrition'),
     path('analyze-meal/', views.analyze_meal, name='analyze_meal'),
+    path('save-ai-meal/', views.save_ai_meal, name='save_ai_meal'),
     path('voice-log/', views.voice_log, name='voice_log'),
     path('community/', views.community_feed, name='community'),
     path('groups/join/<int:group_id>/', views.join_group, name='join_group'),

@@ -297,3 +297,22 @@ def join_group(request, group_id):
     group = SocialGroup.objects.get(id=group_id)
     group.members.add(request.user)
     return redirect('fitness:community')
+
+@login_required
+def save_ai_meal(request):
+    import json
+
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        NutritionLog.objects.create(
+            user=request.user,
+            food_name=data.get("food_name"),
+            calories=data.get("calories"),
+            protein=data.get("protein"),
+            carbs=data.get("carbs"),
+            fats=data.get("fats"),
+            health_score=data.get("health_score", 50),
+        )
+
+        return JsonResponse({"status": "saved"})
