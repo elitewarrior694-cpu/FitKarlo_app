@@ -95,6 +95,121 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Daily Nutrition Cards -->
+<div class="glass rounded-[2rem] overflow-hidden mt-8">
+
+    <!-- Header -->
+    <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center">
+        <h3 class="font-bold text-lg">Daily Nutrition</h3>
+        <a href="{% url 'fitness:log_nutrition' %}" 
+           class="text-xs font-bold text-primary hover:underline">
+            Log Meal
+        </a>
+    </div>
+
+    <!-- Summary -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 px-8 py-6 border-b border-white/5 text-center">
+        <div>
+            <p class="text-[10px] uppercase opacity-40">Calories</p>
+            <p class="font-bold text-secondary">{{ total_calories }}</p>
+        </div>
+        <div>
+            <p class="text-[10px] uppercase opacity-40">Protein</p>
+            <p class="font-bold">{{ total_protein }}g</p>
+        </div>
+        <div>
+            <p class="text-[10px] uppercase opacity-40">Carbs</p>
+            <p class="font-bold">{{ total_carbs }}g</p>
+        </div>
+        <div>
+            <p class="text-[10px] uppercase opacity-40">Fats</p>
+            <p class="font-bold">{{ total_fats }}g</p>
+        </div>
+    </div>
+
+    <!-- Calorie Progress -->
+    <div class="px-8 pb-6">
+        <div class="flex justify-between text-[11px] font-bold uppercase opacity-40 mb-1">
+            <span>Calorie Goal</span>
+            <span>{{ total_calories }} / {{ profile.daily_calorie_target }}</span>
+        </div>
+        <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-gradient-to-r from-secondary to-primary h-full"
+                 style="width: {{ cal_pct }}%">
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="px-6 pb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            {% for meal in nutrition_today %}
+            <div class="glass p-5 rounded-2xl border border-white/5 hover:bg-white/[0.03] transition-all group">
+
+                <!-- Top -->
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
+                        <i data-lucide="utensils" class="w-5 h-5"></i>
+                    </div>
+
+                    <!-- Health Score -->
+                    <span class="text-[10px] font-bold px-2 py-1 rounded-full 
+                        {% if meal.health_score > 75 %}
+                            bg-green-500/20 text-green-400
+                        {% elif meal.health_score > 40 %}
+                            bg-yellow-500/20 text-yellow-400
+                        {% else %}
+                            bg-red-500/20 text-red-400
+                        {% endif %}
+                    ">
+                        {{ meal.health_score }}
+                    </span>
+                </div>
+
+                <!-- Food Name -->
+                <h4 class="font-semibold text-sm mb-2 line-clamp-2">
+                    {{ meal.food_name }}
+                </h4>
+
+                <!-- Calories -->
+                <p class="text-xl font-black text-secondary mb-3">
+                    {{ meal.calories }} kcal
+                </p>
+
+                <!-- Macros -->
+                <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+                    <div>
+                        <p class="opacity-40">P</p>
+                        <p class="font-bold">{{ meal.protein }}g</p>
+                    </div>
+                    <div>
+                        <p class="opacity-40">C</p>
+                        <p class="font-bold">{{ meal.carbs }}g</p>
+                    </div>
+                    <div>
+                        <p class="opacity-40">F</p>
+                        <p class="font-bold">{{ meal.fats }}g</p>
+                    </div>
+                </div>
+
+                <!-- Time -->
+                <p class="text-[10px] opacity-30 mt-4">
+                    {{ meal.logged_at|date:"h:i A" }}
+                </p>
+
+            </div>
+
+            {% empty %}
+            <div class="col-span-full text-center py-12 opacity-30 italic text-sm">
+                No meals logged today. Fuel your body 🍽️
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
         </div>
 
         <!-- Right Column / AI Insights -->

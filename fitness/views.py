@@ -101,39 +101,68 @@ def onboarding(request):
 def dashboard(request):
     user = request.user
     today = date.today()
+
     stats, _ = DailyStats.objects.get_or_create(user=user, date=today)
     profile = getattr(user, 'profile', None)
+
+    # Activities
     recent_activities = Activity.objects.filter(user=user).order_by('-start_time')[:5]
-    nutrition_today = NutritionLog.objects.filter(user=user, logged_at__date=today)
+
+    # Nutrition (TODAY)
+    nutrition_today = NutritionLog.objects.filter(
+        user=user,
+        logged_at__date=today
+    ).order_by('-logged_at')
+
+    # Totals
     total_calories = sum(n.calories for n in nutrition_today)
-    
-    # Progress percentages
+    total_protein = sum(n.protein for n in nutrition_today)
+    total_carbs = sum(n.carbs for n in nutrition_today)
+    total_fats = sum(n.fats for n in nutrition_today)
+
+    # Progress %
     step_pct = min(100, (stats.steps / 10000) * 100) if stats.steps else 0
+
     cal_pct = 0
     if profile and profile.daily_calorie_target:
         cal_pct = min(100, (total_calories / profile.daily_calorie_target) * 100)
+
     sleep_pct = min(100, (stats.sleep_hours / 8) * 100) if stats.sleep_hours else 0
-    
-    # Get AI Insight
+
+    # AI Insight
     user_data = {
         'goal': profile.get_goal_display() if profile else 'Maintenance',
         'steps': stats.steps,
         'calories': total_calories,
-        'protein': profile.protein_target if profile else 150
+        'protein': total_protein
     }
-    ai_insight = ai_service.get_coach_insight(user_data, list(recent_activities.values('type', 'duration_minutes')))
-    
+
+    ai_insight = ai_service.get_coach_insight(
+        user_data,
+        list(recent_activities.values('type', 'duration_minutes'))
+    )
+
     context = {
         'stats': stats,
         'profile': profile,
         'recent_activities': recent_activities,
+
+        # 🔥 NUTRITION
+        'nutrition_today': nutrition_today,
         'total_calories': total_calories,
+        'total_protein': total_protein,
+        'total_carbs': total_carbs,
+        'total_fats': total_fats,
+
+        # Progress
         'step_pct': step_pct,
         'cal_pct': cal_pct,
         'sleep_pct': sleep_pct,
+
         'ai_insight': ai_insight,
         'active_page': 'dashboard',
     }
+
     return render(request, 'fitness/dashboard.html', context)
 
 @login_required
