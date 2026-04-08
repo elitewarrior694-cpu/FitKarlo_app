@@ -319,137 +319,90 @@
 </div>
 
 <script>
-    let watchId = null;
-    let lastPos = null;
-    let totalDistance = 0;
-    let stepCount = 0;
+let watchId = null;
+let lastPos = null;
+let totalDistance = 0;
 
-    const stepEl = document.getElementById("stepCounter");
-    const MIN_DISTANCE_THRESHOLD = 8;     // meters (tune between 6-12)
-    let isMoving = false;
+const stepEl = document.getElementById("stepCounter");
 
-    // Start GPS
-    function startGPS() {
-        if (!navigator.geolocation) {
-            alert("GPS not supported on this device");
-            return;
-        }
+function startGPS() {
+    if (!navigator.geolocation) {
+        alert("GPS not supported");
+        return;
+    }
 
-        watchId = navigator.geolocation.watchPosition(
-            (pos) => {
-                const { latitude, longitude, speed } = pos.coords;
+    watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
 
-                if (lastPos && isMoving) {
-                    const distance = calculateDistance(
-                        lastPos.lat, lastPos.lng,
-                        latitude, longitude
-                    );
+            if (lastPos) {
+                const d = calculateDistance(
+                    lastPos.lat,
+                    lastPos.lng,
+                    latitude,
+                    longitude
+                );
 
-                    if (distance > MIN_DISTANCE_THRESHOLD) {
-                        totalDistance += distance;  // distance in km
-                        updateSteps();
-                    }
+                totalDistance += d;
+
+                // meters
+                let meters = totalDistance * 1000;
+
+                // steps
+                let steps = Math.floor(meters / 0.78);
+
+                stepEl.innerText = steps;
+
+                if (steps % 10 === 0) {
+                    sendStepsToServer(steps);
                 }
-
-                lastPos = { lat: latitude, lng: longitude };
-            },
-            (err) => {
-                console.error("GPS Error:", err);
-            },
-            { 
-                enableHighAccuracy: true,
-                maximumAge: 3000,
-                timeout: 10000 
             }
-        );
-    }
 
-    // Accelerometer for real step detection
-    function startAccelerometer() {
-        if (!window.DeviceMotionEvent) {
-            console.log("Accelerometer not supported");
-            return;
+            lastPos = { lat: latitude, lng: longitude };
+        },
+        (err) => console.log(err),
+        { enableHighAccuracy: true }
+    );
+}
+
+window.onload = startGPS;
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+}
+
+function sendStepsToServer(stepCount) {
+    fetch("/update_steps/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken()
+        },
+        body: JSON.stringify({ steps: stepCount })
+    });
+}
+
+function getCSRFToken() {
+    let cookieValue = null;
+    document.cookie.split(';').forEach(cookie => {
+        let c = cookie.trim();
+        if (c.startsWith('csrftoken=')) {
+            cookieValue = c.substring('csrftoken='.length);
         }
-
-        let lastAcceleration = 0;
-        const THRESHOLD = 1.8;   // Adjust sensitivity (1.5 to 2.5)
-
-        window.addEventListener('devicemotion', (event) => {
-            const acc = event.accelerationIncludingGravity;
-            if (!acc) return;
-
-            const totalAcc = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
-            const delta = Math.abs(totalAcc - lastAcceleration);
-
-            if (delta > THRESHOLD) {
-                isMoving = true;
-                stepCount++;
-                updateSteps();
-
-                // Reset moving flag after some time
-                setTimeout(() => {
-                    isMoving = false;
-                }, 3000);
-            }
-
-            lastAcceleration = totalAcc;
-        });
-    }
-
-    function updateSteps() {
-        // Combine GPS distance and accelerometer steps
-        const distanceMeters = totalDistance * 1000;
-        const distanceSteps = Math.floor(distanceMeters / 0.78);
-        
-        // Take the higher value to make it more accurate
-        const finalSteps = Math.max(distanceSteps, stepCount);
-        
-        stepEl.innerText = finalSteps;
-
-        if (finalSteps % 10 === 0 && finalSteps > 0) {
-            sendStepsToServer(finalSteps);
-        }
-    }
-
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Earth radius in km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) *
-            Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c; // returns km
-    }
-
-    function sendStepsToServer(steps) {
-        fetch("/update_steps/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCSRFToken()
-            },
-            body: JSON.stringify({ steps: steps })
-        }).catch(err => console.error("Send error:", err));
-    }
-
-    function getCSRFToken() {
-        let cookieValue = null;
-        document.cookie.split(';').forEach(cookie => {
-            let c = cookie.trim();
-            if (c.startsWith('csrftoken=')) {
-                cookieValue = c.substring('csrftoken='.length);
-            }
-        });
-        return cookieValue;
-    }
-
-    // Initialize everything
-    window.onload = () => {
-        startGPS();
-        startAccelerometer();
-    };
+    });
+    return cookieValue;
+}
 </script>
 {% endblock %}
