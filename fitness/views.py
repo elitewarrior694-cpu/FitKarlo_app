@@ -4,11 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from .models import Profile, Activity, NutritionLog, DailyStats, SocialGroup
 from .services.ai import AIService
-from datetime import date
 import tempfile
 import json
 import os
-
+from datetime import datetime, timedelta, date
 
 ai_service = AIService()
 
@@ -18,12 +17,16 @@ from django.http import JsonResponse
 def update_steps(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        steps = data.get("steps", 0)
+        new_steps = int(data.get("steps", 0))
 
-        # Save to user profile or stats model
-        profile = request.user.profile
-        profile.steps = steps
-        profile.save()
+        stats, _ = DailyStats.objects.get_or_create(
+            user=request.user,
+            date=date.today()
+        )
+
+        if new_steps > stats.steps:
+            stats.steps = new_steps
+            stats.save()
 
         return JsonResponse({"status": "ok"})
 
@@ -99,6 +102,7 @@ def onboarding(request):
 
 @login_required
 def dashboard(request):
+
     user = request.user
     today = date.today()
 
@@ -147,14 +151,12 @@ def dashboard(request):
         'profile': profile,
         'recent_activities': recent_activities,
 
-        # 🔥 NUTRITION
         'nutrition_today': nutrition_today,
         'total_calories': total_calories,
         'total_protein': total_protein,
         'total_carbs': total_carbs,
         'total_fats': total_fats,
 
-        # Progress
         'step_pct': step_pct,
         'cal_pct': cal_pct,
         'sleep_pct': sleep_pct,
@@ -164,6 +166,7 @@ def dashboard(request):
     }
 
     return render(request, 'fitness/dashboard.html', context)
+
 
 @login_required
 def gps_tracker(request):
@@ -316,3 +319,43 @@ def save_ai_meal(request):
         )
 
         return JsonResponse({"status": "saved"})
+
+
+@login_required
+def log_sleep(request):
+    if request.method == "POST":
+        sleep_start = request.POST.get("sleep_start") 
+        start_period = request.POST.get("start_period")
+
+        sleep_end = request.POST.get("sleep_end")
+        end_period = request.POST.get("end_period")
+
+        start_dt = datetime.strptime(f"{sleep_start} {start_period}", "%I:%M %p")
+        end_dt = datetime.strptime(f"{sleep_end} {end_period}", "%I:%M %p")
+
+        if end_dt <= start_dt:
+            end_dt += timedelta(days=1)
+
+        sleep_hours = (end_dt - start_dt).seconds / 3600
+
+        if sleep_hours < 6:
+            quality = "Low"
+        elif sleep_hours <= 8:
+            quality = "Good"
+        else:
+            quality = "High"
+
+        stats, _ = DailyStats.objects.get_or_create(
+            user=request.user,
+            date=date.today()
+        )
+
+        stats.sleep_hours = round(sleep_hours, 1)
+        stats.sleep_start = start_dt.time()
+        stats.sleep_end = end_dt.time()
+        stats.sleep_quality = quality
+        stats.save()
+
+        return redirect("fitness:dashboard")
+
+    return render(request, "fitness/sleep_log.html")

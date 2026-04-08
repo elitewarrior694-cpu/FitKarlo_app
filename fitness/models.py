@@ -82,11 +82,18 @@ class SocialGroup(models.Model):
 
 class DailyStats(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_stats')
-    date = models.DateField(auto_now_add=True)
+
+    date = models.DateField()
+
     steps = models.PositiveIntegerField(default=0)
+
     sleep_hours = models.FloatField(default=0.0)
+    sleep_start = models.TimeField(null=True, blank=True)
+    sleep_end = models.TimeField(null=True, blank=True)
+    sleep_quality = models.CharField(max_length=10, blank=True)
+
     water_intake_ml = models.PositiveIntegerField(default=0)
-    
+
     class Meta:
         unique_together = ('user', 'date')
 

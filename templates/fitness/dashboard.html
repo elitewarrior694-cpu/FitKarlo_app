@@ -42,13 +42,51 @@
             <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Calories Burned</p>
             <h2 class="text-4xl font-black text-white">{{ total_calories|default:"0" }}</h2>
         </div>
-        <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center">
-            <div class="w-16 h-16 rounded-3xl bg-blue-400/10 flex items-center justify-center text-blue-400 mb-4">
-                <i data-lucide="moon" class="w-10 h-10"></i>
-            </div>
-            <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Sleep Quality</p>
-            <h2 class="text-4xl font-black text-white">{{ stats.sleep_hours|default:"0" }} <span class="text-xs opacity-30">hrs</span></h2>
+<a href="{% url 'fitness:log_sleep' %}">
+    <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center cursor-pointer hover:scale-105 transition">
+
+        <div class="w-16 h-16 rounded-3xl bg-blue-400/10 flex items-center justify-center text-blue-400 mb-4">
+            <i data-lucide="moon" class="w-10 h-10"></i>
         </div>
+
+        <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">
+            Sleep Quality
+        </p>
+
+        <!-- HOURS -->
+        <h2 class="text-4xl font-black text-white">
+            {{ stats.sleep_hours|default:"0" }}
+            <span class="text-xs opacity-30">hrs</span>
+        </h2>
+
+        <!-- TIME RANGE -->
+        {% if stats.sleep_start %}
+        <p class="text-xs opacity-40 mt-1">
+            {{ stats.sleep_start|time:"h:i A" }} - {{ stats.sleep_end|time:"h:i A" }}
+        </p>
+        {% endif %}
+
+        <!-- QUALITY -->
+        {% if stats.sleep_quality %}
+        <p class="text-xs mt-2 font-bold
+            {% if stats.sleep_quality == 'Good' %}
+                text-green-400
+            {% elif stats.sleep_quality == 'Low' %}
+                text-red-400
+            {% else %}
+                text-yellow-400
+            {% endif %}
+        ">
+            {{ stats.sleep_quality }}
+        </p>
+        {% else %}
+        <p class="text-xs opacity-30 mt-2">
+            Tap to log your sleep
+        </p>
+        {% endif %}
+
+    </div>
+</a>
     </div>
 
             <!-- Recent Activity Table -->
@@ -275,28 +313,33 @@
 </div>
 
 <script>
-let steps = 0;
+let steps = parseInt(document.getElementById("stepCounter").innerText) || 0;
 let lastStepTime = 0;
 
-// iPhone permission (VERY IMPORTANT)
-if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
-    document.body.addEventListener("click", function () {
+function initTracking() {
+    if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
+        // iPhone
         DeviceMotionEvent.requestPermission()
             .then(response => {
                 if (response === "granted") {
                     startTracking();
+                } else {
+                    alert("Motion permission needed for step tracking");
                 }
             })
             .catch(console.error);
-    }, { once: true });
-} else {
-    startTracking();
+    } else {
+        // Android / others
+        startTracking();
+    }
 }
+
+// 🔥 START ON PAGE LOAD
+window.onload = initTracking;
 
 function startTracking() {
     window.addEventListener("devicemotion", function(event) {
         let acc = event.accelerationIncludingGravity;
-
         if (!acc) return;
 
         let magnitude = Math.sqrt(
@@ -307,7 +350,6 @@ function startTracking() {
 
         let now = Date.now();
 
-        // Step detection logic (tuned a bit better)
         if (magnitude > 12 && (now - lastStepTime) > 400) {
             steps++;
             lastStepTime = now;
@@ -315,7 +357,7 @@ function startTracking() {
             // Update UI
             document.getElementById("stepCounter").innerText = steps;
 
-            // Send to backend every 5 steps
+            // Send every 5 steps
             if (steps % 5 === 0) {
                 sendStepsToServer(steps);
             }
@@ -334,18 +376,15 @@ function sendStepsToServer(stepCount) {
     });
 }
 
-// CSRF helper (Django)
+// CSRF helper
 function getCSRFToken() {
     let cookieValue = null;
-    let cookies = document.cookie.split(';');
-
-    cookies.forEach(cookie => {
+    document.cookie.split(';').forEach(cookie => {
         let c = cookie.trim();
         if (c.startsWith('csrftoken=')) {
             cookieValue = c.substring('csrftoken='.length);
         }
     });
-
     return cookieValue;
 }
 </script>
