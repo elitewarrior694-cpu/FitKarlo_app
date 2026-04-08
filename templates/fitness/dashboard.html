@@ -324,73 +324,61 @@ let lastPos = null;
 let totalDistance = 0;
 
 const stepEl = document.getElementById("stepCounter");
-const STEP_LENGTH = 0.78; // meters
 
-window.onload = startTracking;
-
-function startTracking() {
-
+function startGPS() {
     if (!navigator.geolocation) {
         alert("GPS not supported");
         return;
     }
 
     watchId = navigator.geolocation.watchPosition(
-        updatePosition,
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+
+            if (lastPos) {
+                const d = calculateDistance(
+                    lastPos.lat,
+                    lastPos.lng,
+                    latitude,
+                    longitude
+                );
+
+                totalDistance += d;
+
+                // meters
+                let meters = totalDistance * 1000;
+
+                // steps
+                let steps = Math.floor(meters / 0.78);
+
+                stepEl.innerText = steps;
+
+                if (steps % 10 === 0) {
+                    sendStepsToServer(steps);
+                }
+            }
+
+            lastPos = { lat: latitude, lng: longitude };
+        },
         (err) => console.log(err),
-        {
-            enableHighAccuracy: true,
-            maximumAge: 2000,
-            timeout: 10000
-        }
+        { enableHighAccuracy: true }
     );
 }
 
-function updatePosition(pos) {
-
-    const { latitude, longitude } = pos.coords;
-
-    if (lastPos) {
-
-        const d = calculateDistance(
-            lastPos.lat,
-            lastPos.lng,
-            latitude,
-            longitude
-        );
-
-        // ignore very tiny GPS drift (<5m)
-        if (d < 0.005) return;
-
-        totalDistance += d;
-
-        const meters = totalDistance * 1000;
-        const steps = Math.floor(meters / STEP_LENGTH);
-
-        stepEl.innerText = steps;
-
-        if (steps % 10 === 0) {
-            sendStepsToServer(steps);
-        }
-    }
-
-    lastPos = { lat: latitude, lng: longitude };
-}
+window.onload = startGPS;
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
-
     const R = 6371;
-
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
 
     const a =
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI/180) *
-        Math.cos(lat2 * Math.PI/180) *
-        Math.sin(dLon/2) * Math.sin(dLon/2);
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) ** 2;
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c;
 }
@@ -408,15 +396,12 @@ function sendStepsToServer(stepCount) {
 
 function getCSRFToken() {
     let cookieValue = null;
-
     document.cookie.split(';').forEach(cookie => {
         let c = cookie.trim();
-
         if (c.startsWith('csrftoken=')) {
             cookieValue = c.substring('csrftoken='.length);
         }
     });
-
     return cookieValue;
 }
 </script>
