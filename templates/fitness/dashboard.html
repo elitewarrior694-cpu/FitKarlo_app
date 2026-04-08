@@ -313,56 +313,68 @@
 </div>
 
 <script>
-let steps = parseInt(document.getElementById("stepCounter").innerText) || 0;
-let lastStepTime = 0;
+let watchId = null;
+let lastPos = null;
+let totalDistance = 0;
 
-function initTracking() {
-    if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
-        // iPhone
-        DeviceMotionEvent.requestPermission()
-            .then(response => {
-                if (response === "granted") {
-                    startTracking();
-                } else {
-                    alert("Motion permission needed for step tracking");
-                }
-            })
-            .catch(console.error);
-    } else {
-        // Android / others
-        startTracking();
+const stepEl = document.getElementById("stepCounter");
+
+function startGPS() {
+    if (!navigator.geolocation) {
+        alert("GPS not supported");
+        return;
     }
+
+    watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+
+            if (lastPos) {
+                const d = calculateDistance(
+                    lastPos.lat,
+                    lastPos.lng,
+                    latitude,
+                    longitude
+                );
+
+                totalDistance += d;
+
+                // meters
+                let meters = totalDistance * 1000;
+
+                // steps
+                let steps = Math.floor(meters / 0.78);
+
+                stepEl.innerText = steps;
+
+                if (steps % 10 === 0) {
+                    sendStepsToServer(steps);
+                }
+            }
+
+            lastPos = { lat: latitude, lng: longitude };
+        },
+        (err) => console.log(err),
+        { enableHighAccuracy: true }
+    );
 }
 
-// 🔥 START ON PAGE LOAD
-window.onload = initTracking;
+window.onload = startGPS;
 
-function startTracking() {
-    window.addEventListener("devicemotion", function(event) {
-        let acc = event.accelerationIncludingGravity;
-        if (!acc) return;
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
 
-        let magnitude = Math.sqrt(
-            acc.x * acc.x +
-            acc.y * acc.y +
-            acc.z * acc.z
-        );
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) ** 2;
 
-        let now = Date.now();
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        if (magnitude > 12 && (now - lastStepTime) > 400) {
-            steps++;
-            lastStepTime = now;
-
-            // Update UI
-            document.getElementById("stepCounter").innerText = steps;
-
-            // Send every 5 steps
-            if (steps % 5 === 0) {
-                sendStepsToServer(steps);
-            }
-        }
-    });
+    return R * c;
 }
 
 function sendStepsToServer(stepCount) {
@@ -376,7 +388,6 @@ function sendStepsToServer(stepCount) {
     });
 }
 
-// CSRF helper
 function getCSRFToken() {
     let cookieValue = null;
     document.cookie.split(';').forEach(cookie => {
