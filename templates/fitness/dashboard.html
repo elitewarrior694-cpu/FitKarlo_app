@@ -322,16 +322,14 @@
 let watchId = null;
 let lastPos = null;
 let totalDistance = 0;
-let lastUpdateTime = 0;
 
 const stepEl = document.getElementById("stepCounter");
-
-// average step length (meters)
-const STEP_LENGTH = 0.78;
+const STEP_LENGTH = 0.78; // meters
 
 window.onload = startTracking;
 
 function startTracking() {
+
     if (!navigator.geolocation) {
         alert("GPS not supported");
         return;
@@ -342,19 +340,15 @@ function startTracking() {
         (err) => console.log(err),
         {
             enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 5000
+            maximumAge: 2000,
+            timeout: 10000
         }
     );
 }
 
 function updatePosition(pos) {
-    const { latitude, longitude, accuracy } = pos.coords;
 
-    // ❌ Ignore bad GPS accuracy
-    if (accuracy > 20) return;
-
-    const now = Date.now();
+    const { latitude, longitude } = pos.coords;
 
     if (lastPos) {
 
@@ -365,19 +359,8 @@ function updatePosition(pos) {
             longitude
         );
 
-        // ❌ Ignore tiny GPS drift (<10 meters)
-        if (d < 0.01) return;
-
-        // ❌ Ignore teleport jumps (>50 meters suddenly)
-        if (d > 0.05) return;
-
-        const timeDiff = (now - lastUpdateTime) / 1000;
-
-        // speed km/h
-        const speed = (d / timeDiff) * 3600;
-
-        // ❌ Ignore impossible speeds
-        if (speed > 15) return;
+        // ignore very tiny GPS drift (<5m)
+        if (d < 0.005) return;
 
         totalDistance += d;
 
@@ -392,11 +375,10 @@ function updatePosition(pos) {
     }
 
     lastPos = { lat: latitude, lng: longitude };
-    lastUpdateTime = now;
 }
 
-// Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
+
     const R = 6371;
 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -426,12 +408,15 @@ function sendStepsToServer(stepCount) {
 
 function getCSRFToken() {
     let cookieValue = null;
+
     document.cookie.split(';').forEach(cookie => {
         let c = cookie.trim();
+
         if (c.startsWith('csrftoken=')) {
             cookieValue = c.substring('csrftoken='.length);
         }
     });
+
     return cookieValue;
 }
 </script>
