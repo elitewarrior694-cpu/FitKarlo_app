@@ -343,12 +343,12 @@ function startGPS() {
                     longitude
                 );
 
+                // ⭐ Ignore GPS drift (less than 5 meters)
+                if (d < 0.005) return;
+
                 totalDistance += d;
 
-                // meters
                 let meters = totalDistance * 1000;
-
-                // steps
                 let steps = Math.floor(meters / 0.78);
 
                 stepEl.innerText = steps;
@@ -361,7 +361,7 @@ function startGPS() {
             lastPos = { lat: latitude, lng: longitude };
         },
         (err) => console.log(err),
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true, maximumAge: 2000 }
     );
 }
 
@@ -369,6 +369,7 @@ window.onload = startGPS;
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
+
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
 
