@@ -26,15 +26,21 @@
     <!-- Main Grid -->
     <!-- Simplified Metrics -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center">
-            <div class="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-4">
-                <i data-lucide="footprints" class="w-10 h-10"></i>
-            </div>
-            <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Total Steps</p>
-            <h2 id="stepCounter" class="text-4xl font-black text-white">
-                {{ stats.steps|default:"0" }}
-            </h2>
-        </div>
+<div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center">
+    
+    <div class="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-4">
+        <i data-lucide="footprints" class="w-10 h-10"></i>
+    </div>
+
+    <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">
+        Total Steps (GPS may be slow)
+    </p>
+
+    <h2 id="stepCounter" class="text-4xl font-black text-white">
+        {{ stats.steps|default:"0" }}
+    </h2>
+
+</div>
         <div class="glass p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-center items-center text-center">
             <div class="w-16 h-16 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary mb-4">
                 <i data-lucide="zap" class="w-10 h-10"></i>
